@@ -1,17 +1,67 @@
 import { Button, Card, Form, Modal, Table } from "react-bootstrap";
 import classNames from "classnames";
-import { FormProvider, useForm, useFormContext } from "react-hook-form";
+import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { lotDropdown, unitDropdown } from "./dropDown";
+import React from "react";
 
-const ManageLotModal = ({
-  show,
-  setShow,
-  handleToggle,
-  lots,
-  watchProduct,
-}) => {
-  console.log(watchProduct);
+const ManageLotModal = ({ show, setShow, handleToggle }) => {
   const methods = useFormContext();
-  const { register } = methods;
+  const { register, control, watch, setValue } = methods;
+
+  const {
+    fields: selectLotProduct,
+    append,
+    remove,
+  } = useFieldArray({
+    control,
+    name: `selectedProducts[${show?.productIndex}].selectedLotProducts`,
+  });
+  const selectedProducts = watch("selectedProducts");
+  const selectedLotProducts = show?.product?.selectedLotProducts;
+  console.log(selectedLotProducts);
+  const productLots = lotDropdown?.filter(
+    (item) => item.product === show.productId
+  );
+
+  const findUnits = (unitDropdown, lot, lotDropdown) => {
+    let units = [];
+    console.log(unitDropdown, lot, lotDropdown);
+    lotDropdown.forEach((lot) => {
+      if (lot.value === lot.value) {
+        units = unitDropdown
+          .filter((unitItem) =>
+            Object.keys(lot.purchasePrice || {}).includes(unitItem.value)
+          )
+          .map((unitItem) => ({
+            value: unitItem.value,
+            label: unitItem.label,
+          }));
+      }
+    });
+    console.log("units:", units);
+    return units;
+  };
+
+  const handleSelectLot = (e, lot) => {
+    const { checked } = e.target;
+    if (checked) {
+      const alreadyChecked = selectLotProduct?.findIndex(
+        (lotField) => lotField.value === lot.value
+      );
+      const lotUnits = findUnits(unitDropdown, lot, productLots);
+      console.log(lotUnits);
+      if (alreadyChecked === -1) {
+        append({ ...lot, lotUnits, checked });
+      }
+    } else {
+      const findLotIndex = selectLotProduct?.findIndex(
+        (item) => item.value === lot.value
+      );
+      if (findLotIndex !== -1) {
+        remove(findLotIndex);
+      }
+    }
+  };
 
   return (
     <Card className={classNames("", { "d-none": !show })}>
@@ -28,7 +78,9 @@ const ManageLotModal = ({
           </Modal.Header>
           <Modal.Body>
             <form id="lotManageForm" noValidate>
-              {lots?.map((item, index) => {
+              {productLots?.map((item, index) => {
+                const fieldName = `selectedProducts[${show?.productIndex}].selectedLotProducts`;
+
                 return (
                   <Table
                     key={index}
@@ -38,17 +90,56 @@ const ManageLotModal = ({
                   >
                     <thead className="table-light">
                       <tr>
-                        <th className="text-center" colSpan={2}>
-                          <div className="d-flex justify-content-center align-items-center">
-                            <Form.Check
-                              type={"checkbox"}
-                              required={false}
-                              className={""}
-                              placeholder={""}
-                              label={`${item?.label}`}
-                              name={`product.lotProducts.${index}.isSelected`}
-                              {...register(
-                                `product.lotProducts.${index}.isSelected`
+                        <th className="text-center bg-dark-subtle" colSpan={3}>
+                          <div key={item.value}>
+                            {/* <Controller
+                              control={control}
+                              // name={`selectedLots[${index}]`}
+                              render={({ field }) => (
+                                <>
+                                  <input
+                                    {...field}
+                                    id={item.id}
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={field.value || false}
+                                    onChange={(e) =>
+                                      field.onChange(
+                                        e.target.checked && item.id
+                                      )
+                                    }
+                                  />
+                                  <label
+                                    className="form-check-label ms-2"
+                                    htmlFor={item.id}
+                                  >
+                                    {item.label}
+                                  </label>
+                                </>
+                              )}
+                            /> */}
+                            <Controller
+                              control={control}
+                              name={fieldName}
+                              render={({ field }) => (
+                                <>
+                                  <input
+                                    id={item.id}
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    // checked={field.value?.checked || false}
+                                    onChange={(e) => {
+                                      // field.onChange(e.target.checked);
+                                      handleSelectLot(e, item);
+                                    }}
+                                  />
+                                  <label
+                                    className="form-check-label ms-2"
+                                    htmlFor={item.id}
+                                  >
+                                    {item.label}
+                                  </label>
+                                </>
                               )}
                             />
                           </div>
@@ -56,52 +147,49 @@ const ManageLotModal = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {watchProduct?.lotProducts?.map(
-                        (item, index) => console.log(item,index)
-                          // item?.isSelected && (
-                          //   <>
-                          //     <Table className="align-middle" size="sm" key={index}>
-                          //       <thead className="text-dark">
-                          //         <tr>
-                          //           <th className="text-center">{"Unit"}</th>
-                          //           <th className="text-center">
-                          //             {"Quantity"}
-                          //           </th>
-                          //           <th className="text-center">
-                          //             {"Purchase price"}
-                          //           </th>
-                          //         </tr>
-                          //       </thead>
-                          //       {/* <tbody>
-                          //         {watchProduct?.unit?.map(
-                          //           (item, index) =>
-                          //             item.selected && (
-                          //               <>
-                          //                 <tr key={index}>
-                          //                   <td> {item?.label}</td>
-                          //                   <td>
-                          //                     <input
-                          //                       type="number"
-                          //                       required={false}
-                          //                       className={"mt-1"}
-                          //                     />
-                          //                   </td>
-                          //                   <td>
-                          //                     <input
-                          //                       type="number"
-                          //                       required={false}
-                          //                       className={"mt-1"}
-                          //                     />
-                          //                   </td>
-                          //                 </tr>
-                          //               </>
-                          //             )
-                          //         )}
-                          //       </tbody> */}
-                          //     </Table>
-                          //   </>
-                          // )
-                      )}
+                      <tr>
+                        <th className="text-center bg-light">{"Unit"}</th>
+                        <th className="text-center bg-light">{"Quantity"}</th>
+                        <th className="text-center bg-light">
+                          {"Purchase price"}
+                        </th>
+                      </tr>
+                      {show?.product?.selectedUnit?.map((unit, unitIndex) => {
+                        if (
+                          unit?.checked &&
+                          selectedProducts?.[`${show?.productIndex}`]
+                            ?.selectedLotProducts?.[`${index}`]?.checked
+                        ) {
+                          return (
+                            <>
+                              <tr key={`${unitIndex}`} className="text-center">
+                                <td>{unit.label}</td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    required={false}
+                                    className={"mt-1"}
+                                    // name={`selectedProducts[${show?.productIndex}].selectedLotProducts[${index}].lotUnits[${unitIndex}].qty`}
+                                    {...register(
+                                      `selectedProducts[${show?.productIndex}].selectedLotProducts[${index}].lotUnits[${unitIndex}].qty`
+                                    )}
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    required={false}
+                                    className={"mt-1"}
+                                    {...register(
+                                      `selectedProducts[${show?.productIndex}].selectedLotProducts[${index}].lotUnits[${unitIndex}].price`
+                                    )}
+                                  />
+                                </td>
+                              </tr>
+                            </>
+                          );
+                        }
+                      })}
                     </tbody>
                   </Table>
                 );
@@ -109,7 +197,7 @@ const ManageLotModal = ({
 
               <div className="mt-5 text-end">
                 <Button type="submit" variant="primary">
-                  {"submit"}
+                  {"Manage Lot"}
                 </Button>
               </div>
             </form>
