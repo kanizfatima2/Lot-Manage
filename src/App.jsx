@@ -16,151 +16,43 @@ import { convertArrayToObjectKeys } from "./utils/convertArrraytoObjectKeys";
 import { RiCornerUpRightLine } from "react-icons/ri";
 
 const purchaseDefaultValue = {
-  // selectedUnits: [],
-  // selectedLots: [],
   selectedProducts: [],
 };
 
 function App() {
   const [show, setShow] = useState(false);
 
-  // const schema = yup.object({
-  //   productName: yup.string().required("Product name is Required"),
-  //   // unit: yup.array().of(
-  //   //   yup.object().shape({
-  //   //     selected: yup.boolean(),
-  //   //     quantity: yup.number().when("selected", {
-  //   //       is: true,
-  //   //       then: (schema) =>
-  //   //         schema
-  //   //           .required("Quantity is Required")
-  //   //           // .min(1)
-  //   //           .typeError("Quantity must be a number"),
-  //   //       otherwise: (schema) => schema.notRequired(),
-  //   //     }),
-  //   //     purchasePrice: yup.number().when("selected", {
-  //   //       is: true,
-  //   //       then: (schema) =>
-  //   //         schema
-  //   //           .required("Purchase Price is Required")
-  //   //           // .min(1)
-  //   //           .typeError("Purchase Price must be a number"),
-  //   //       otherwise: (schema) => schema.notRequired(),
-  //   //     }),
-  //   //   })
-  //   // ),
-  //   // .test(
-  //   //   "at-least-one-selected",
-  //   //   "At least one unit must be selected",
-  //   //   (units) => {
-  //   //     return units.some((unit) => {
-  //   //       return unit.selected === true;
-  //   //     });
-  //   //   }
-  //   // ),
-  //   selectedUnits: yup
-  //     .array()
-  //     .of(yup.string())
-  //     .test(
-  //       "at-least-one-selected",
-  //       "At least one unit must be selected",
-  //       (units) => {
-  //         return units.some((unit) => {
-  //           return unit;
-  //         });
-  //       }
-  //     ),
-
-  //   quantity: yup.array().of(
-  //     yup.object().shape({
-  //       // qty: yup
-  //       //   .number()
-  //       //   .transform((value) => (isNaN(value) ? undefined : value))
-  //       //   .when(["selectedUnits"], {
-  //       //     is: Array.selectedUnits,
-  //       //     // is: (selectedUnits) => Array.selectedUnits,
-  //       //     // is: (val) => console.log(val),
-  //       //     // is: (selectedUnits) =>
-  //       //     //   Array.selectedUnits &&
-  //       //     //   selectedUnits &&
-  //       //     //   !selectedUnits.includes(undefined),
-  //       //     // is: Array.isArray,
-
-  //       //     then: (schema) =>
-  //       //       schema
-  //       //         .required("Quantity is Required")
-  //       //         .min(1, "Quantity is Required")
-  //       //         .typeError("Quantity must be a number"),
-  //       //     otherwise: (schema) => schema.notRequired(),
-  //       //   }),
-
-  //       qty: yup
-  //         .number()
-  //         .transform((value) => (isNaN(value) ? undefined : value))
-  //         .when("selectedUnits", (a, b, value) => {
-  //           if (
-  //             // value?.from?.[1]?.value?.selectedUnits?.map((x) =>
-  //             //   value?.from?.[1]?.value?.quantity?.find((item) => {
-  //             //     if (item.id === x) {
-  //             //       return x;
-  //             //     }
-  //             //   })
-  //             // )
-  //             value?.from?.[1]?.value?.selectedUnits?.some.call(
-  //               selectedUnits,
-  //               (x) => typeof x === "string"
-  //             )
-  //           )
-  //             // console.log(value?.from?.[1]?.value?.quantity?.find((item)=>console.log(item.id)))
-  //             return yup
-  //               .number()
-  //               .required("Quantity is Required")
-  //               .min(1, "Quantity must be greater than 0")
-  //               .typeError("Quantity must be a number");
-  //         }),
-
-  //       price: yup
-  //         .number()
-  //         .transform((value) => (isNaN(value) ? undefined : value))
-  //         .when("selectedUnits", (a, b, value) => {
-  //           if (
-  //             value?.from?.[1]?.value?.selectedUnits?.some.call(
-  //               selectedUnits,
-  //               (x) => typeof x === "string"
-  //             )
-  //           ) {
-  //             return yup
-  //               .number()
-  //               .required("Purchase Price is Required")
-  //               .min(1, "Purchase price must be greater than 0")
-  //               .typeError("Purchase Price must be a number");
-  //           }
-  //         }),
-  //     })
-  //   ),
-  //   // .test(
-  //   //   "at-least-one-selected",
-  //   //   "At least one unit must be selected",
-  //   //   (units) => {
-  //   //     return units.some((unit) => {
-  //   //       return unit;
-  //   //     });
-  //   //   }
-  //   // ),
-  //   discount: yup
-  //     .number()
-  //     .min(0, "Discount must be greater than to equal to 0")
-  //     .typeError("Discount is Required"),
-  //   tax: yup
-  //     .number()
-  //     .min(0, "Tax must be greater than or equal to 0")
-  //     .typeError("Tax is Required"),
-  // });
+  const schema = yup
+    .object({
+      selectedProducts: yup
+        .array()
+        .of(
+          yup.object().shape({
+            discount: yup
+              .number()
+              .required("Discount is Required")
+              .min(1, "Discount must be greater than or equal to 0")
+              .typeError("Discount is Required"),
+            tax: yup
+              .number()
+              .required("Tax is Required")
+              .min(1, "Tax must be greater than or equal to 0")
+              .typeError("Tax is Required"),
+          })
+        )
+        .required("Selected products are required")
+        .test(
+          "length",
+          "Selected products must contain exactly one product",
+          (val) => val.length === 1
+        ),
+    })
+    .required();
 
   const methods = useForm({
     defaultValues: purchaseDefaultValue,
     mode: "all",
-    resolver: yupResolver(),
+    resolver: yupResolver(schema),
   });
 
   const {
@@ -228,7 +120,7 @@ function App() {
       );
 
       if (alreadySelected === -1) {
-        append({ ...actionMeta.option, selectedUnit });
+        append({ ...actionMeta.option, selectedUnit, discount: 0, tax: 0 });
       }
     }
 
@@ -247,8 +139,8 @@ function App() {
   //   setValue(`selectedProducts[`productIndex`].selectedUnit[unitIndex]`);
   // };
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit = (formData) => {
+    console.log(formData);
   };
 
   console.log("error:", errors);
@@ -415,15 +307,18 @@ function App() {
                           <input
                             type="number"
                             name={`selectedProducts[${productIndex}].discount`}
-                            required={false}
+                            // required={true}
                             className={"mt-1"}
                             {...register(
                               `selectedProducts[${productIndex}].discount`
                             )}
                           />
-                          {errors?.discount && (
+                          {errors?.selectedProducts?.[`${productIndex}`] && (
                             <p className="text-danger">
-                              {errors?.discount?.message}
+                              {
+                                errors?.selectedProducts?.[`${productIndex}`]
+                                  ?.discount?.message
+                              }
                             </p>
                           )}
                         </td>
@@ -431,14 +326,17 @@ function App() {
                           <input
                             type="number"
                             name={`selectedProducts[${productIndex}].tax`}
-                            required={false}
+                            // required={true}
                             {...register(
                               `selectedProducts[${productIndex}].tax`
                             )}
                           />
-                          {errors?.tax && (
+                          {errors?.selectedProducts?.[`${productIndex}`] && (
                             <p className="text-danger">
-                              {errors?.tax?.message}
+                              {
+                                errors?.selectedProducts?.[`${productIndex}`]
+                                  ?.tax?.message
+                              }
                             </p>
                           )}
                         </td>
@@ -449,9 +347,10 @@ function App() {
                             required={false}
                             className={"mt-1"}
                             disabled
-                            {...register(
-                              `selectedProducts[${productIndex}].subTotal`
-                            )}
+                            // {...register(
+                            //   `selectedProducts[${productIndex}].subTotal`
+                            // )}
+                            value={200}
                           />
                         </td>
                         <td>
@@ -473,7 +372,8 @@ function App() {
 
                       {product?.selectedUnit?.map(
                         (item, unitIndex) =>
-                          item.checked && (
+                          item.checked &&
+                          !show && (
                             <>
                               <tr>
                                 <td></td>
